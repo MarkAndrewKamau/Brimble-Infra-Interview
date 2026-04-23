@@ -1,0 +1,54 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: infra/backend.Dockerfile
+    container_name: brimble-backend
+    user: "0:0"
+    security_opt:
+      - label=disable
+    environment:
+      PORT: "3000"
+      DATA_DIR: /data
+      BUILDKIT_HOST: docker-container://buildkit
+      DOCKER_NETWORK: brimble-platform
+      CADDY_ADMIN_URL: http://caddy:2019/load
+      BACKEND_UPSTREAM: backend:3000
+      APP_BASE_URL: http://localhost
+      DEPLOYMENT_HOST_SUFFIX: .localhost
+    volumes:
+      - platform-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:z
+    depends_on:
+      - buildkit
+    networks:
+      - platform
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: caddy
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro,z
+    depends_on:
+      - backend
+    networks:
+      - platform
+
+  buildkit:
+    image: moby/buildkit:latest
+    container_name: buildkit
+    privileged: true
+    volumes:
+      - buildkit-state:/var/lib/buildkit
+    networks:
+      - platform
+
+networks:
+  platform:
+    name: brimble-platform
+
+volumes:
+  platform-data:
+  buildkit-state:
