@@ -1,0 +1,26 @@
+{
+  "name": "@brimble/backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "unzipper": "^0.12.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.13.4",
+    "@types/unzipper": "^0.10.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
+
