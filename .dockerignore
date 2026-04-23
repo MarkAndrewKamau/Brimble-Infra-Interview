@@ -1,0 +1,8 @@
+.git
+.codex
+node_modules
+apps/*/dist
+apps/*/node_modules
+dist
+npm-debug.log
+data
