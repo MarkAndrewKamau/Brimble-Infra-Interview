@@ -1,0 +1,13 @@
+{
+  "name": "brimble-infra-interview",
+  "private": true,
+  "workspaces": [
+    "apps/backend",
+    "apps/frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @brimble/frontend && npm run build --workspace @brimble/backend",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}
+
