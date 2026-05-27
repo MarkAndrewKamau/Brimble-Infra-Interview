@@ -7,8 +7,11 @@ export interface RunCommandOptions {
   args: string[];
   cwd?: string;
   env?: NodeJS.ProcessEnv;
+  timeoutMs?: number;
   onLine?: (stream: OutputStream, line: string) => void;
 }
+
+const KILL_GRACE_MS = 5000;
 
 export interface RunCommandResult {
   stdout: string;
@@ -46,6 +49,32 @@ export async function runCommand(options: RunCommandOptions): Promise<RunCommand
     const stderrLines: string[] = [];
     let stdoutCarry = "";
     let stderrCarry = "";
+    let timedOut = false;
+    let timeoutTimer: NodeJS.Timeout | undefined;
+    let killTimer: NodeJS.Timeout | undefined;
+
+    const clearTimers = (): void => {
+      if (timeoutTimer) {
+        clearTimeout(timeoutTimer);
+        timeoutTimer = undefined;
+      }
+      if (killTimer) {
+        clearTimeout(killTimer);
+        killTimer = undefined;
+      }
+    };
+
+    if (options.timeoutMs && options.timeoutMs > 0) {
+      timeoutTimer = setTimeout(() => {
+        timedOut = true;
+        child.kill("SIGTERM");
+        killTimer = setTimeout(() => {
+          child.kill("SIGKILL");
+        }, KILL_GRACE_MS);
+        killTimer.unref();
+      }, options.timeoutMs);
+      timeoutTimer.unref();
+    }
 
     child.stdout.on("data", (chunk) => {
       stdoutCarry = forwardLines("stdout", chunk, stdoutCarry, stdoutLines, options.onLine);
@@ -56,10 +85,13 @@ export async function runCommand(options: RunCommandOptions): Promise<RunCommand
     });
 
     child.on("error", (error) => {
+      clearTimers();
       reject(error);
     });
 
     child.on("close", (code) => {
+      clearTimers();
+
       if (stdoutCarry) {
         stdoutLines.push(stdoutCarry);
         options.onLine?.("stdout", stdoutCarry);
@@ -68,6 +100,15 @@ export async function runCommand(options: RunCommandOptions): Promise<RunCommand
       if (stderrCarry) {
         stderrLines.push(stderrCarry);
         options.onLine?.("stderr", stderrCarry);
+      }
+
+      if (timedOut) {
+        reject(
+          new Error(
+            `${options.command} ${options.args.join(" ")} timed out after ${options.timeoutMs}ms`
+          )
+        );
+        return;
       }
 
       if (code === 0) {
