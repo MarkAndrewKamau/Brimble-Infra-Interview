@@ -79,6 +79,7 @@ export class DeploymentRunner {
         command: "railpack",
         args: ["build", "--name", imageTag, "--progress", "plain", projectRoot],
         cwd: projectRoot,
+        timeoutMs: config.buildTimeoutMs,
         env: {
           ...process.env,
           BUILDKIT_HOST: config.buildkitHost
@@ -111,6 +112,14 @@ export class DeploymentRunner {
           containerName,
           "--network",
           config.dockerNetwork,
+          "--memory",
+          config.deploymentMemory,
+          "--memory-swap",
+          config.deploymentMemory,
+          "--cpus",
+          config.deploymentCpus,
+          "--pids-limit",
+          String(config.deploymentPidsLimit),
           "--label",
           "brimble.managed=true",
           "--label",
@@ -166,6 +175,7 @@ export class DeploymentRunner {
       await runCommand({
         command: "git",
         args: ["clone", "--depth", "1", job.gitUrl, destinationDir],
+        timeoutMs: config.cloneTimeoutMs,
         onLine: (stream, line) => {
           void this.log(
             job.deploymentId,
