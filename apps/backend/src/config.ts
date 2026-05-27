@@ -31,6 +31,11 @@ export const config = {
   appBaseUrl: trimTrailingSlash(process.env.APP_BASE_URL ?? "http://localhost"),
   deploymentHostSuffix: normalizeHostSuffix(process.env.DEPLOYMENT_HOST_SUFFIX),
   deploymentPort: readNumber(process.env.DEPLOYMENT_PORT, 8080),
+  buildTimeoutMs: readNumber(process.env.BUILD_TIMEOUT_MS, 600000),
+  cloneTimeoutMs: readNumber(process.env.CLONE_TIMEOUT_MS, 120000),
+  deploymentMemory: process.env.DEPLOYMENT_MEMORY ?? "512m",
+  deploymentCpus: process.env.DEPLOYMENT_CPUS ?? "1.0",
+  deploymentPidsLimit: readNumber(process.env.DEPLOYMENT_PIDS_LIMIT, 256),
   frontendDistDir: path.resolve(process.cwd(), "apps/frontend/dist")
 };
 

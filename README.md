@@ -315,6 +315,11 @@ The backend reads these environment variables:
 | `APP_BASE_URL` | `http://localhost` | Base URL for the platform. |
 | `DEPLOYMENT_HOST_SUFFIX` | `.localhost` | Suffix appended to deployment slugs. |
 | `DEPLOYMENT_PORT` | `8080` | Port exposed by built deployment containers. |
+| `BUILD_TIMEOUT_MS` | `600000` | Maximum time a Railpack build may run before it is killed and the deployment fails. |
+| `CLONE_TIMEOUT_MS` | `120000` | Maximum time a Git clone may run before it is killed and the deployment fails. |
+| `DEPLOYMENT_MEMORY` | `512m` | Memory limit applied to each deployment container (`--memory`/`--memory-swap`). |
+| `DEPLOYMENT_CPUS` | `1.0` | CPU limit applied to each deployment container (`--cpus`). |
+| `DEPLOYMENT_PIDS_LIMIT` | `256` | Maximum number of processes allowed in each deployment container (`--pids-limit`). |
 
 ## Source Handling
 
@@ -402,7 +407,7 @@ A clean ZIP of `samples/hello-node` was deployed successfully. The resulting dep
 
 - Deployments are processed sequentially instead of concurrently.
 - There is no authentication or multi-tenant isolation.
-- There are no resource quotas for CPU, memory, disk, or build time.
+- Deployment containers have CPU, memory, and process limits, and builds/clones have timeouts, but there is no disk quota.
 - Old images and containers are not garbage-collected beyond replacing the same deployment container name.
 - Health checks use a simple HTTP request to `/`.
 - The UI is intentionally compact and focused on the core platform workflow.
@@ -413,8 +418,7 @@ A clean ZIP of `samples/hello-node` was deployed successfully. The resulting dep
 
 - Add automated tests around ZIP extraction safety, state transitions, Caddy config generation, and log persistence.
 - Add a cleanup job for old workspaces, images, and stopped containers.
-- Add per-deployment build timeouts and clearer cancellation behavior.
-- Add resource limits to `docker run`.
+- Add clearer build cancellation behavior (current timeouts kill the Railpack CLI but the BuildKit job may continue until pruned).
 - Add authentication and basic audit metadata.
 - Add a richer health-check model with configurable paths.
 - Add retry/backoff controls for source clone and image pulls.
